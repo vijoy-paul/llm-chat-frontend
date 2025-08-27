@@ -7,9 +7,9 @@ import ThemeToggle from "./ThemeToggle";
 
 
 const API_URL = import.meta.env.PROD
-  ? `${import.meta.env.VITE_API_URL}/chat`
-  : '/api/chat'; // dev proxy
-
+  ? '/.netlify/functions/chat'
+  : `${import.meta.env.VITE_API_URL}/.netlify/functions/chat`; 
+             
 
 
 export default function Chatbot({ theme, setTheme }) {
