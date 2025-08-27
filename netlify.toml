@@ -1,0 +1,6 @@
+[build]
+  publish = "dist"               # your Vite build output
+  functions = "netlify/functions" # path to functions
+
+[dev]
+  functions = "netlify/functions" # optional: run functions locally with netlify dev
