@@ -6,10 +6,10 @@ import ReactMarkdown from "react-markdown";
 import ThemeToggle from "./ThemeToggle";
 
 
-const API_URL = import.meta.env.PROD
-  ? '/.netlify/functions/proxy-chat' // production: use serverless proxy
-  : import.meta.env.VITE_API_URL + '/.netlify/functions/chat';   
-
+const API_URL =
+  import.meta.env.MODE === "production"
+    ? "/.netlify/functions/proxy-chat" // Production → call Netlify proxy
+    : import.meta.env.VITE_API_URL + "/.netlify/functions/chat"; 
 
 export default function Chatbot({ theme, setTheme }) {
   const [messages, setMessages] = useState([]);
