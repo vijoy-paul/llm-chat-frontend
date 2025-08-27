@@ -5,7 +5,11 @@ import "../../public/animate.min.css";
 import ReactMarkdown from "react-markdown";
 import ThemeToggle from "./ThemeToggle";
 
-const API_URL = '/api/chat';
+
+const API_URL = import.meta.env.PROD
+  ? `${import.meta.env.VITE_API_URL}/chat`
+  : '/api/chat'; // dev proxy
+
 
 
 export default function Chatbot({ theme, setTheme }) {
@@ -72,6 +76,7 @@ export default function Chatbot({ theme, setTheme }) {
         role: msg.sender === 'user' ? 'user' : 'assistant',
         content: msg.text,
       }));
+      console.log(API_URL);
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
