@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-const BACKEND_URL = process.env.CHAT_HOST_URL;
+const BACKEND_URL = process.env.CHAT_HOST_URL; // just the backend domain
 
 export async function handler(event, context) {
   try {
@@ -17,7 +17,8 @@ export async function handler(event, context) {
       };
     }
 
-    const response = await fetch(BACKEND_URL, {
+    // Forward request to the real backend function
+    const response = await fetch(`${BACKEND_URL}/.netlify/functions/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
