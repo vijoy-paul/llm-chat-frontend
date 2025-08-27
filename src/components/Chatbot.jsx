@@ -5,7 +5,7 @@ import "../../public/animate.min.css";
 import ReactMarkdown from "react-markdown";
 import ThemeToggle from "./ThemeToggle";
 
-const API_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:3001/api/chat';
+const API_URL = import.meta.env.CHAT_HOST_URL || 'http://localhost:3001/api/chat';
 
 
 export default function Chatbot({ theme, setTheme }) {
