@@ -2,13 +2,64 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="stylesheet" href="/animate.min.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="description" content="Intelligent AI chatbot for educational purposes. Engage in meaningful conversations with advanced language models." />
+    <meta name="keywords" content="AI, chatbot, LLM, conversation, educational, artificial intelligence" />
+    <meta name="author" content="LLM Chat Platform" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Theme and PWA meta tags -->
+    <meta name="theme-color" content="#1c1c1e" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="LLM Chat" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="LLM Chat – Intelligent AI Conversation Platform" />
+    <meta property="og:description" content="Intelligent AI chatbot for educational purposes. Engage in meaningful conversations with advanced language models." />
+    <meta property="og:site_name" content="LLM Chat" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="LLM Chat – Intelligent AI Conversation Platform" />
+    <meta name="twitter:description" content="Intelligent AI chatbot for educational purposes. Engage in meaningful conversations with advanced language models." />
+    
+    <!-- Favicon and icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/animate.min.css" />
+    
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
     <title>LLM Chat – Intelligent AI Conversation Platform</title>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Prevent theme flickering by setting theme before React loads
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        let theme = 'dark'; // Default to dark mode
+        
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+          theme = savedTheme;
+        }
+        
+        document.body.setAttribute('data-theme', theme);
+        
+        // Update meta theme-color
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (metaThemeColor) {
+          metaThemeColor.setAttribute('content', theme === 'dark' ? '#1c1c1e' : '#007aff');
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

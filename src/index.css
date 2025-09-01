@@ -1,25 +1,141 @@
+/* Import Apple-style fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:wght@300;400;500;600;700&display=swap');
+
 :root {
-	font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-	line-height: 1.5;
-	font-weight: 400;
-	color: #213547;
-	background-color: #f7f8fa;
-	font-synthesis: none;
-	text-rendering: optimizeLegibility;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', system-ui, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 1.47059;
+  font-weight: 400;
+  color: #1d1d1f;
+  background-color: #f5f5f7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  letter-spacing: -0.022em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
 }
 
 body {
-	margin: 0;
-	min-width: 320px;
-	min-height: 100vh;
-	background: #f7f8fa;
-	box-sizing: border-box;
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f5f5f7;
+  overflow-x: hidden;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
 }
 
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Improve focus styles for accessibility */
+*:focus {
+  outline: 2px solid #007aff;
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove default button styles */
+button {
+  font-family: inherit;
+}
+
+/* Improve text selection */
+::selection {
+  background-color: rgba(0, 122, 255, 0.2);
+  color: inherit;
+}
+
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Remove default list styles */
+ul, ol {
+  margin: 0;
+  padding: 0;
+}
+
+/* Improve form elements */
+input, textarea, select {
+  font-family: inherit;
+}
+
+/* Mobile optimizations */
 @media (max-width: 480px) {
   body {
-    padding: 1%;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Prevent zoom on input focus on iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #ffffff;
+    background-color: #1c1c1e;
+  }
+  
+  body {
+    background: #1c1c1e;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    color: #000000;
+    background-color: #ffffff;
+  }
+  
+  body {
+    background: #ffffff;
   }
 }
