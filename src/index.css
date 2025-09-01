@@ -15,4 +15,11 @@ body {
 	min-width: 320px;
 	min-height: 100vh;
 	background: #f7f8fa;
+	box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 1%;
+  }
 }
