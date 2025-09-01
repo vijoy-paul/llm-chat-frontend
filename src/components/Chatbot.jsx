@@ -10,6 +10,9 @@ const MAX_MESSAGE_LENGTH = 1000;
 const RATE_LIMIT_DURATION = 15;
 const TYPING_DELAY_MIN = 12;
 const TYPING_DELAY_MAX = 30;
+const STORAGE_KEY = 'chatbot-conversation-history';
+const MAX_STORED_MESSAGES = 50; // Limit stored messages to prevent storage bloat
+const CLEAR_STORAGE_AFTER_REQUESTS = 10; // Clear storage after this many API requests
 
 const API_URL =
   import.meta.env.MODE === "production"
@@ -28,6 +31,82 @@ const validateInput = (input) => {
 const sanitizeText = (text) => {
   if (typeof text !== 'string') return String(text);
   return text.replace(/[<>]/g, (match) => match === '<' ? '&lt;' : '&gt;');
+};
+
+// Storage utility functions
+const saveConversationHistory = (messages) => {
+  try {
+    // Only save the last MAX_STORED_MESSAGES to prevent storage bloat
+    const messagesToSave = messages.slice(-MAX_STORED_MESSAGES);
+    const historyData = {
+      messages: messagesToSave,
+      timestamp: Date.now(),
+      version: '1.0'
+    };
+    console.log('Saving conversation history:', messagesToSave.length, 'messages');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(historyData));
+    console.log('Successfully saved to localStorage');
+  } catch (error) {
+    console.warn('Failed to save conversation history:', error);
+  }
+};
+
+const loadConversationHistory = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    console.log('Loading conversation history:', stored ? 'Found stored data' : 'No stored data');
+    if (stored) {
+      const historyData = JSON.parse(stored);
+      console.log('Parsed history data:', historyData);
+      // Validate the stored data structure
+      if (historyData && Array.isArray(historyData.messages)) {
+        console.log('Loaded messages count:', historyData.messages.length);
+        return historyData.messages;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load conversation history:', error);
+  }
+  return [];
+};
+
+const clearConversationHistory = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY + '-request-count');
+    console.log('Conversation history and request count cleared');
+  } catch (error) {
+    console.warn('Failed to clear conversation history:', error);
+  }
+};
+
+// Request count management
+const getRequestCount = () => {
+  try {
+    const count = localStorage.getItem(STORAGE_KEY + '-request-count');
+    return count ? parseInt(count, 10) : 0;
+  } catch (error) {
+    console.warn('Failed to get request count:', error);
+    return 0;
+  }
+};
+
+const incrementRequestCount = () => {
+  try {
+    const currentCount = getRequestCount();
+    const newCount = currentCount + 1;
+    localStorage.setItem(STORAGE_KEY + '-request-count', newCount.toString());
+    console.log('Request count incremented to:', newCount);
+    return newCount;
+  } catch (error) {
+    console.warn('Failed to increment request count:', error);
+    return 0;
+  }
+};
+
+const shouldClearStorage = () => {
+  const requestCount = getRequestCount();
+  return requestCount >= CLEAR_STORAGE_AFTER_REQUESTS;
 }; 
 
 export default function Chatbot({ theme, setTheme }) {
@@ -47,6 +126,26 @@ export default function Chatbot({ theme, setTheme }) {
   const typingTimeoutRef = useRef(null);
   const rateLimitTimeoutRef = useRef(null);
   const recognitionRef = useRef(null);
+
+  // Load conversation history on mount
+  useEffect(() => {
+    const savedMessages = loadConversationHistory();
+    console.log('Saved messages:', savedMessages);
+    if (savedMessages.length > 0) {
+      setMessages(savedMessages);
+      setHasLoadedFromStorage(true);
+    } else {
+      setHasLoadedFromStorage(true); // Set to true even if no saved messages
+    }
+    
+    // Load request count
+    const currentRequestCount = getRequestCount();
+    setRequestCount(currentRequestCount);
+  }, []);
+
+  // Track if we've loaded from storage to prevent initial greeting
+  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
+  const [requestCount, setRequestCount] = useState(0);
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -126,17 +225,24 @@ export default function Chatbot({ theme, setTheme }) {
 
   // Initial greeting effect
   useEffect(() => {
-    if (messages.length === 0) {
+    if (messages.length === 0 && hasLoadedFromStorage) {
       const greeting = "Hi! How can I help you today?";
       createTypingEffect(greeting, 0, () => {
         setMessages([{ sender: "bot", text: greeting, animate: true, id: Date.now() }]);
       });
     }
-  }, [messages.length, createTypingEffect]);
+  }, [messages.length, hasLoadedFromStorage, createTypingEffect]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Save conversation history whenever messages change
+  useEffect(() => {
+    if (messages.length > 0 && hasLoadedFromStorage) {
+      saveConversationHistory(messages);
+    }
+  }, [messages, hasLoadedFromStorage]);
 
   // Rate limit countdown
   useEffect(() => {
@@ -177,6 +283,20 @@ export default function Chatbot({ theme, setTheme }) {
     setMessages(newMessages);
     setInput("");
     setLoading(true);
+    
+    // Increment request count and check if we should clear storage
+    const newRequestCount = incrementRequestCount();
+    setRequestCount(newRequestCount);
+    if (shouldClearStorage()) {
+      console.log('Reached request limit, clearing storage...');
+      clearConversationHistory();
+      setMessages([]);
+      setEditIdx(null);
+      setEditValue("");
+      setInputError("");
+      setRequestCount(0);
+    }
+    
     try {
       // Prepare messages in OpenAI format with sanitized content
       const formattedMessages = newMessages.map((msg) => ({
@@ -264,6 +384,22 @@ export default function Chatbot({ theme, setTheme }) {
     // If this was the last user message, regenerate the bot response
     if (editIdx === messagesUpToEdit.length - 1 && messagesUpToEdit[editIdx].sender === 'user') {
       setLoading(true);
+      
+      // Increment request count and check if we should clear storage
+      const newRequestCount = incrementRequestCount();
+      setRequestCount(newRequestCount);
+      if (shouldClearStorage()) {
+        console.log('Reached request limit during edit, clearing storage...');
+        clearConversationHistory();
+        setMessages([]);
+        setEditIdx(null);
+        setEditValue("");
+        setInputError("");
+        setRequestCount(0);
+        setLoading(false);
+        return;
+      }
+      
       try {
         // Prepare messages in OpenAI format with sanitized content
         const formattedMessages = messagesUpToEdit.map((msg) => ({
@@ -344,6 +480,18 @@ export default function Chatbot({ theme, setTheme }) {
     }
   }, [isListening]);
 
+  // Clear conversation history
+  const clearHistory = useCallback(() => {
+    if (window.confirm('Are you sure you want to clear the conversation history? This action cannot be undone.')) {
+      setMessages([]);
+      clearConversationHistory();
+      setEditIdx(null);
+      setEditValue("");
+      setInputError("");
+      setRequestCount(0);
+    }
+  }, []);
+
   // Memoized message list for performance
   const messageList = useMemo(() => 
     messages.map((msg, idx) => (
@@ -355,9 +503,9 @@ export default function Chatbot({ theme, setTheme }) {
         role="article"
         aria-label={`${msg.sender} message`}
           >
-                        {msg.sender === "bot" ? (
-          <>
-            {typeof msg.text === 'string' ? (
+            {msg.sender === "bot" ? (
+              <>
+                {typeof msg.text === 'string' ? (
               <ReactMarkdown
                 components={{
                   code: ({ node, inline, className, children, ...props }) => {
@@ -423,7 +571,7 @@ export default function Chatbot({ theme, setTheme }) {
               >
                 {msg.text}
               </ReactMarkdown>
-            ) : Array.isArray(msg.text) ? (
+                ) : Array.isArray(msg.text) ? (
               <div className="json-block-container">
                 <div className="json-block-header">
                   <span className="json-label">JSON</span>
@@ -457,7 +605,7 @@ export default function Chatbot({ theme, setTheme }) {
                 </div>
                 <pre className="json-block">{JSON.stringify(msg.text, null, 2)}</pre>
               </div>
-            ) : typeof msg.text === 'object' && msg.text !== null ? (
+                ) : typeof msg.text === 'object' && msg.text !== null ? (
               <div className="json-block-container">
                 <div className="json-block-header">
                   <span className="json-label">JSON</span>
@@ -491,13 +639,13 @@ export default function Chatbot({ theme, setTheme }) {
                 </div>
                 <pre className="json-block">{JSON.stringify(msg.text, null, 2)}</pre>
               </div>
-            ) : (
-              String(msg.text)
-            )}
+                ) : (
+                  String(msg.text)
+                )}
             {idx > 0 && (
-              <button
+                  <button
                 className="copy-btn"
-                title="Copy response"
+                    title="Copy response"
                 aria-label="Copy message to clipboard"
                 onClick={(e) => {
                   const textToCopy = typeof msg.text === 'string' ? msg.text : JSON.stringify(msg.text, null, 2);
@@ -521,11 +669,11 @@ export default function Chatbot({ theme, setTheme }) {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" strokeWidth="2" fill="none"/>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" strokeWidth="2" fill="none"/>
-                </svg>
-              </button>
-            )}
-          </>
-        ) : editIdx === idx ? (
+                    </svg>
+                  </button>
+                )}
+              </>
+            ) : editIdx === idx ? (
           <div className="edit-mode">
                 <input
                   type="text"
@@ -606,6 +754,23 @@ export default function Chatbot({ theme, setTheme }) {
       <header className="chat-header">
         <span className="chat-title">Chat</span>
         <span className="header-spacer" />
+        {requestCount > 0 && (
+          <span className="request-counter" title={`${requestCount}/${CLEAR_STORAGE_AFTER_REQUESTS} requests`}>
+            {requestCount}/{CLEAR_STORAGE_AFTER_REQUESTS}
+          </span>
+        )}
+        {messages.length > 1 && (
+          <button
+            className="clear-history-btn"
+            onClick={clearHistory}
+            title="Clear conversation history"
+            aria-label="Clear conversation history"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        )}
         <ThemeToggle theme={theme} setTheme={setTheme} />
       </header>
       <div className="chat-window" role="log" aria-live="polite" aria-label="Chat messages">

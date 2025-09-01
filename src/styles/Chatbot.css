@@ -346,6 +346,54 @@ body {
   flex: 1;
 }
 
+/* Request counter */
+.request-counter {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: var(--spacing-sm);
+  color: #ffc107;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin-right: var(--spacing-sm);
+  transition: var(--transition-fast);
+  backdrop-filter: var(--backdrop-filter);
+}
+
+.request-counter:hover {
+  background: rgba(255, 193, 7, 0.2);
+  border-color: rgba(255, 193, 7, 0.5);
+}
+
+/* Clear history button */
+.clear-history-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--spacing-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+  backdrop-filter: var(--backdrop-filter);
+  margin-right: var(--spacing-sm);
+  opacity: 0.7;
+}
+
+.clear-history-btn:hover {
+  background: rgba(255, 59, 48, 0.1);
+  border-color: rgba(255, 59, 48, 0.3);
+  color: #ff3b30;
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.clear-history-btn:active {
+  transform: scale(0.95);
+}
+
 /* ===== CHAT WINDOW ===== */
 .chat-window {
 	flex: 1;
@@ -1273,6 +1321,22 @@ body {
     min-width: 28px;
     min-height: 28px;
     padding: 4px;
+  }
+  
+  .clear-history-btn {
+    padding: 4px;
+    margin-right: var(--spacing-xs);
+  }
+  
+  .clear-history-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .request-counter {
+    font-size: 10px;
+    padding: 2px 6px;
+    margin-right: var(--spacing-xs);
   }
   
 	.chat-input-row {
